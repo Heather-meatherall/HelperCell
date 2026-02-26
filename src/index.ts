@@ -9,11 +9,17 @@ import { initializeApp } from "firebase/app";
 import { getFirestore,  doc, setDoc  } from "firebase/firestore";
 import {firebaseConfig} from "./config"
 import helpercellIcon from "../style/icons/helpercellIcon.svg"
-import { LabIcon } from '@jupyterlab/ui-components';
+import comment from "../style/icons/comment.svg"
+import { LabIcon,  } from '@jupyterlab/ui-components';
 
 export const helperCellIcon = new LabIcon({
   name: 'helpercell:feedback',
   svgstr: helpercellIcon
+});
+
+export const commentIcon = new LabIcon({
+  name: 'helpercell:comment',
+  svgstr: comment
 });
 
 const CommandIds = {runCodeCell: 'toolbar-button:run-code-cell'};
@@ -157,7 +163,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
     const { commands } = app;
 
     
-    // run feedback code when the button is pressed
+    // HelperCell
     commands.addCommand(CommandIds.runCodeCell, {
      icon: icon,
      caption: 'HelperCell',
@@ -175,7 +181,16 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
 
       // inserts new cell
-      NotebookActions.insertBelow(notebook);
+      if (timesRun > 1)
+      {
+        NotebookActions.insertAbove(notebook);
+      }
+      else
+      {
+        NotebookActions.insertBelow(notebook);
+      }
+
+      
       activeCell = notebook.activeCell;
       activeCell!.model.sharedModel.source = "Feedback loading...";
 
@@ -192,7 +207,13 @@ const plugin: JupyterFrontEndPlugin<void> = {
      isVisible: () => tracker.activeCell?.model.type === 'code'
     });
 
+  
   }
+  
 };
 
+
+
+      
+      
 export default plugin;

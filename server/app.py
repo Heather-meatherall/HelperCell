@@ -1,7 +1,7 @@
 from flask import Flask, flash, request, render_template, redirect, url_for
 from google import genai
 from flask_cors import CORS
-from config import SECRET_KEY, GEMINI_API_KEY
+from server.config import SECRET_KEY, GEMINI_API_KEY
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -53,7 +53,7 @@ def home():
   
   
 
-  prompt = "Provide feedback for the code cound in studentAnswer given the above question. Provide the output in a markdown format"
+  prompt = "Provide feedback for the code found in studentAnswer given the above question. Include the studentAnswer at the begining. Provide the output in a markdown format"
   response = client.models.generate_content(
         model="gemini-2.5-flash",
         config={
