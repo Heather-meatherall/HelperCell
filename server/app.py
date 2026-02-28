@@ -53,7 +53,7 @@ def home():
   
   
 
-  prompt = "Provide feedback for the code found in studentAnswer given the above question. Include the studentAnswer at the begining. Provide the output in a markdown format"
+  prompt = f"Provide feedback for {studentAnswer} given {question}. Provide the output in a markdown format"
   response = client.models.generate_content(
         model="gemini-2.5-flash",
         config={
@@ -65,8 +65,10 @@ def home():
             additionalInfo
           ],
       )
+  
+ 
 
-  return str(response.text)
+  return  f"Student code <br> {studentAnswer} <br>***<br> {str(response.text)}"
 
 
 
