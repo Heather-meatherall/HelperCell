@@ -1,7 +1,7 @@
 from flask import Flask, flash, request, render_template, redirect, url_for
 from google import genai
 from flask_cors import CORS
-from server.config import SECRET_KEY, GEMINI_API_KEY
+from config import SECRET_KEY, GEMINI_API_KEY
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
