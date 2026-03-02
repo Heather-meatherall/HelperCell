@@ -56,29 +56,24 @@ function getUserId()
 function getUserFeedback()
 {
   console.log(participaint);
-  if(participaint)
-      {
-      InputDialog.getItem({
-        title: 'How useful was the last feedback you received',
-        items: ['', 'Very useful', 'Useful', 'Neutral', 'Useless', 'Very Useless'],
-        editable: false,
-        }).then(value => {
-          console.log(value.value);
-          if(value.value == '')
-          {
-            alert("Feedback can not be blank");
-            getUserFeedback();
-          }
-          else
-          {
-            saveData(value.value);
-          }
+    InputDialog.getItem({
+      title: 'How useful was the last feedback you received',
+      items: ['', 'Very useful', 'Useful', 'Neutral', 'Useless', 'Very Useless'],
+      editable: false,
+      }).then(value => {
+        console.log(value.value);
+        if(value.value == '')
+        {
+          alert("Feedback can not be blank");
+          getUserFeedback();
+        }
+        else
+        {
+          saveData(value.value);
+        }
+    });
+  }
 
-        });
-      }
-      else{
-        getUserId()
-      }
 }
 
 async function saveData(value: any)
@@ -161,6 +156,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
   ) => {
     const { commands } = app;
 
+    // get pariticpaint code 
+    getUserId();
     
     // HelperCell
     commands.addCommand(CommandIds.runCodeCell, {
