@@ -14,8 +14,7 @@ instructions = "You are a TA for a beginner programming course for students with
 "submission. You can provide feedback regarding things like simple logical inconsistencies, " \
 "like unused variables or unreachable code, writing code once, and avoiding hard coding values " \
 "but your priority is to ensure the student can successfully get the right output next time. " \
-"If you provide code examples, make them different from the provided code while still " \
-"communicating the same concept"
+"If you provide code examples, only provide them in pseudocode"
 
 messages = [{'type': 'System Instructions', 'information': instructions}]
 additionalInfo = ""

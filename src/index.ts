@@ -3,14 +3,17 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
-import { ICommandPalette, InputDialog } from '@jupyterlab/apputils';
+import { ICommandPalette, showDialog, Dialog } from '@jupyterlab/apputils';
 import { INotebookTracker, NotebookActions } from '@jupyterlab/notebook';
 import { initializeApp } from "firebase/app";
-import { getFirestore,  doc, setDoc  } from "firebase/firestore";
+import { getFirestore,  doc, setDoc, updateDoc  } from "firebase/firestore";
 import {firebaseConfig} from "./config"
 import helpercellIcon from "../style/icons/helpercellIcon.svg"
 import comment from "../style/icons/comment.svg"
 import { LabIcon,  } from '@jupyterlab/ui-components';
+import { IUserManager, User } from '@jupyterlab/services';
+import { Widget } from '@lumino/widgets';
+
 
 export const helperCellIcon = new LabIcon({
   name: 'helpercell:feedback',
@@ -22,10 +25,27 @@ export const commentIcon = new LabIcon({
   svgstr: comment
 });
 
+const feedbackBody = new Widget();
+feedbackBody.node.innerHTML = `
+  <label>How useful was the last feedback you received: 
+    <select id="feedback-select">
+    <option value="empty"></option>
+      <option value="very-useful">Very useful</option>
+      <option value="useful">Useful</option>
+      <option value="neutral">Neutral</option>
+      <option value="useless">Useless</option>
+      <option value="very-useless">Very useless</option>
+    </select>
+  </label>
+  <br>
+  <label>Additional Feedback: <input type="text" id="additional"></label>
+`;
+
 const CommandIds = {runCodeCell: 'helpercell:run-code-cell', addComment: 'helpercell:add-comment'};
 var icon = helperCellIcon;
 var timesRun = 0;
-var participaint: any = '';
+var participant: any = '';
+var content = '';
 
 interface promptData {
   studentAnswer: string;
@@ -35,54 +55,57 @@ interface promptData {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-function getUserId()
-{
-  InputDialog.getText({
-          title: 'Please enter your participant code' 
-        }).then(value => {
-          if (value.value == '')
-          {
-            alert("Participant code can not be blank");
-            getUserId();
-          }
-          else
-          {
-            participaint = value.value;
-          }
-          
-        });
-}
-
 function getUserFeedback()
 {
-  console.log(participaint);
-    InputDialog.getItem({
-      title: 'How useful was the last feedback you received',
-      items: ['', 'Very useful', 'Useful', 'Neutral', 'Useless', 'Very Useless'],
-      editable: false,
-      }).then(value => {
-        console.log(value.value);
-        if(value.value == '')
-        {
-          alert("Feedback can not be blank");
-          getUserFeedback();
-        }
-        else
-        {
-          saveData(value.value);
-        }
-    });
+  console.log(participant);
+  showDialog({
+  title: 'Setup User',
+  body: feedbackBody,
+  buttons: [Dialog.cancelButton(), Dialog.okButton()]
+}).then(result => {
+  if (result.button.accept) {
+    const additional = (feedbackBody.node.querySelector('#additional') as HTMLInputElement).value;
+    
+    const feedbackSelect = (feedbackBody.node.querySelector("#feedback-select") as HTMLInputElement).value;
+
+    if(feedbackSelect != "empty")
+    {
+      saveData(feedbackSelect, additional, content);
+    }
+    else
+    {
+      alert("Feedback can't be blank");
+      getUserFeedback();
+    }
+    
+  }
+});
   }
 
-}
-
-async function saveData(value: any)
+async function saveData(value: any, additional: any, content: any)
 {
-  await setDoc(doc(db, "participaints", participaint), {
-    ["feedback"+(timesRun-1)]: value
-});   
-}
+  const index = Math.max(0, timesRun - 1);
+  const docRef = doc(db, "participants", participant);
 
+  try {
+    await updateDoc(docRef, {
+      // Using dot notation to update a specific nested key
+      [`responses.${index}`]: {
+        value: value,
+        additional: additional,
+        feedback: content
+      }
+    });
+  } catch (e) {
+    // If the document doesn't exist yet, updateDoc will fail. 
+    // In that case, use setDoc with merge: true
+    await setDoc(docRef, {
+      responses: {
+        [index]: { value, additional, content}
+      }
+    }, { merge: true });
+  }
+}
 
 // calls to server and returns AI-generated feedback
 async function getFeedback(url: string, code: string, instructions: string): Promise<any>
@@ -148,16 +171,17 @@ const plugin: JupyterFrontEndPlugin<void> = {
   id: 'feedback:plugin',
   description: 'A JupyterLab extension.',
   autoStart: true,
-  requires: [ICommandPalette, INotebookTracker],
+  requires: [ICommandPalette, INotebookTracker, IUserManager],
   activate: async(
     app: JupyterFrontEnd,
     palette: ICommandPalette,
     tracker: INotebookTracker,
+    user: User.IManager
   ) => {
     const { commands } = app;
 
     // get pariticpaint code 
-    getUserId();
+    participant = user.identity?.username;
     
     // HelperCell
     commands.addCommand(CommandIds.runCodeCell, {
@@ -167,7 +191,6 @@ const plugin: JupyterFrontEndPlugin<void> = {
       const current = tracker.currentWidget;
       const notebook = current!.content;
       var activeCell = notebook.activeCell;
-      console.log(timesRun);
       
 
       timesRun += 1;
@@ -186,7 +209,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
       activeCell = notebook.activeCell;
       activeCell!.model.sharedModel.source = "Feedback loading...";
 
-      const content = await getFeedback("http://127.0.0.1:5000/", code, question);
+      content = await getFeedback("http://127.0.0.1:5000/", code, question);
 
       // add content to nextly created cell
       activeCell!.model.sharedModel.source = content;
@@ -210,7 +233,6 @@ const plugin: JupyterFrontEndPlugin<void> = {
       label: 'Provide feedback',
       execute: () => {
 
-        console.log('Im here!');
         getUserFeedback();
 
       },
