@@ -4,7 +4,7 @@ c = get_config()  # Initialize configuration object
 c.JupyterHub.authenticator_class = 'nativeauthenticator.NativeAuthenticator'
 c.NativeAuthenticator.open_signup = True
 
-user_file = './jupyterhub/users.txt'
+user_file = '/srv/jupyterhub/jupyterhub/users.txt'
 
 # Initialize sets to avoid errors if file is missing
 allowed = {} 
