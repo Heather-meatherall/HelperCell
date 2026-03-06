@@ -18,11 +18,15 @@ if os.path.exists(user_file):
 c.Authenticator.allowed_users = allowed
 c.Authenticator.admin_users = {'admin'}
 
-def auto_authorize(authentication):
-    if authentication['name'] in allowed:
-        return True
-    return False
+async def auto_authorize(authenticator, handler, authentication):
+    user_name = authentication['name']
+    if user_name in allowed:
+        # This tells NativeAuthenticator to bypass the manual approval screen
+        authenticator.log.info(f"Auto-authorizing {user_name}")
+        return authentication
+    return None
 
+c.Authenticator.post_auth_hook = auto_authorize
 c.NativeAuthenticator.import_from_config = True 
 
 
