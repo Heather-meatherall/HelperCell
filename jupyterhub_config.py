@@ -15,6 +15,7 @@ if os.path.exists(user_file):
         file_users = {line.strip() for line in f if line.strip()}
         allowed.update(file_users)
 
+c.NativeAuthenticator.import_from_config = True
 c.Authenticator.allowed_users = allowed
 c.Authenticator.admin_users = {'admin'}
 
