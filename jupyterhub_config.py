@@ -1,5 +1,5 @@
 import os, nativeauthenticator
-c = get_config()  # Initialize configuration object
+# c = get_config()  # Initialize configuration object
 
 c.JupyterHub.authenticator_class = 'nativeauthenticator.NativeAuthenticator'
 c.NativeAuthenticator.open_signup = True
@@ -7,7 +7,7 @@ c.NativeAuthenticator.open_signup = True
 user_file = '/srv/jupyterhub/jupyterhub/users.txt'
 
 # Initialize sets to avoid errors if file is missing
-allowed = {} 
+allowed = {'admin'}
 
 if os.path.exists(user_file):
     with open(user_file, 'r') as f:
@@ -16,5 +16,13 @@ if os.path.exists(user_file):
         allowed.update(file_users)
 
 c.Authenticator.allowed_users = allowed
-# c.Authenticator.admin_users = {'admin'}
+c.Authenticator.admin_users = {'admin'}
+
+def auto_authorize(authentication):
+    if authentication['name'] in allowed:
+        return True
+    return False
+
 c.NativeAuthenticator.import_from_config = True 
+
+
