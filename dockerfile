@@ -30,11 +30,8 @@ FROM quay.io/jupyterhub/k8s-singleuser-sample:${Z2JH_VERSION}
 
 USER root
 
-RUN pip install --no-cache-dir jupyterhub-nativeauthenticator
-RUN mkdir -p /srv/jupyterhub/jupyterhub
-COPY jupyterhub_config.py /srv/jupyterhub/jupyterhub_config.py
-COPY users.txt /srv/jupyterhub/jupyterhub/users.txt
-RUN chown -R ${NB_USER}:users /srv/jupyterhub
+COPY jupyter_config.py /etc/jupyter/jupyter_config.py
+COPY jupyterhub/users.txt /etc/jupyter/users.txt
 
 COPY --from=build-stage /tmp/wheels/*.whl /tmp/wheels/
 RUN pip install --no-cache-dir \
@@ -44,4 +41,3 @@ RUN pip install --no-cache-dir \
 
 USER ${NB_USER}
 
-CMD ["jupyterhub", "-f", "/srv/jupyterhub/jupyterhub_config.py"]

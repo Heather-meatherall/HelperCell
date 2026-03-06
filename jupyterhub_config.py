@@ -1,13 +1,12 @@
-import os, nativeauthenticator
-# c = get_config()  # Initialize configuration object
+import os
+c = get_config()  # Initialize configuration object
 
 c.JupyterHub.authenticator_class = 'nativeauthenticator.NativeAuthenticator'
 c.NativeAuthenticator.open_signup = True
 
-user_file = '/srv/jupyterhub/jupyterhub/users.txt'
+user_file = './jupyterhub/users.txt'
 
-# Initialize sets to avoid errors if file is missing
-allowed = {'admin'}
+allowed = {'admin'} 
 
 if os.path.exists(user_file):
     with open(user_file, 'r') as f:
@@ -15,19 +14,6 @@ if os.path.exists(user_file):
         file_users = {line.strip() for line in f if line.strip()}
         allowed.update(file_users)
 
-c.NativeAuthenticator.import_from_config = True
 c.Authenticator.allowed_users = allowed
 c.Authenticator.admin_users = {'admin'}
-
-async def auto_authorize(authenticator, handler, authentication):
-    user_name = authentication['name']
-    if user_name in allowed:
-        # This tells NativeAuthenticator to bypass the manual approval screen
-        authenticator.log.info(f"Auto-authorizing {user_name}")
-        return authentication
-    return None
-
-c.Authenticator.post_auth_hook = auto_authorize
 c.NativeAuthenticator.import_from_config = True 
-
-
