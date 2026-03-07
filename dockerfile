@@ -30,9 +30,6 @@ FROM quay.io/jupyterhub/k8s-singleuser-sample:${Z2JH_VERSION}
 
 USER root
 
-COPY jupyterhub_config.py /etc/jupyter/jupyterhub_config.py
-COPY jupyterhub/users.txt /etc/jupyter/users.txt
-
 COPY --from=build-stage /tmp/wheels/*.whl /tmp/wheels/
 RUN pip install --no-cache-dir \
         jupyter-server-proxy \
