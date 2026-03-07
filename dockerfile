@@ -30,6 +30,8 @@ FROM quay.io/jupyterhub/k8s-singleuser-sample:${Z2JH_VERSION}
 
 USER root
 
+RUN pip install jupyterhub jupyterlab jupyterhub-nativeauthenticator
+
 COPY --from=build-stage /tmp/wheels/*.whl /tmp/wheels/
 RUN pip install --no-cache-dir \
         jupyter-server-proxy \
